@@ -27,6 +27,7 @@ sapply(file.path(userdir, dir(userdir)[grep("code_", dir(userdir))]), file.remov
 
 # cat(fs::path_wd())
 
+# source("inst/shiny-examples/inspectR/R/global_helper.R", local = TRUE)
 source("R/global_helper.R", local = TRUE)
 
 if (!exists("shiny.tt")) {
