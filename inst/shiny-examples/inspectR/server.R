@@ -16,7 +16,7 @@ server = function(input, output, session) {
   source("inst/R/server_main.R", local = TRUE)
   source("inst/R/server_sig_compare.R", local = TRUE)
 
-  # if shiny.tt exits in the current environment, add a comment
+  # if investigatR_obj exits in the current environment, add a comment
   # interpolate(~("# abv"),
   #             mydir = userdir,
   #             `_env` = environment(),

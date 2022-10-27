@@ -26,7 +26,7 @@ output$selectk <- renderUI({
   } else {
     NULL
   }
-  
+
 })
 
 output$selectid <- renderUI({
@@ -44,9 +44,9 @@ output$selectid <- renderUI({
 observeEvent(input$scanID, {
   scanidx <- shiny.r$data %>% tibble::rowid_to_column() %>%
     filter(scan_id == isolate(input$scanID)) %>% pull(rowid)
-  
+
   # cat("input$scanID is observed \n")
-  
+
   if(!(FROM_CONFIRM & scanidx < kk())) {
     if(scanidx != kk()) {
       kk(scanidx)
@@ -56,11 +56,11 @@ observeEvent(input$scanID, {
       # cat("the value of scanidx:", scanidx, "\n\n")
     }
   }
-  
-    
+
+
 })
 observeEvent(input$k, {
-    
+
   # cat("input$k is observed, the value is:", input$k,  "\n")
   # cat(FROM_CONFIRM, "\n")
   # cat("the value of kk:", kk(), "\n")
@@ -71,30 +71,30 @@ observeEvent(input$k, {
       FROM_CONFIRM <<- FALSE
     }
   }
-  
+
   if(FROM_CONFIRM & as.numeric(input$k) == kk()) { FROM_CONFIRM <<- FALSE }
 
 })
 
 # CONFIRM
 observeEvent(input$confirm,{
-  
+
   k.tmp <- isolate(kk())
   comments <- isolate(input$x3p_comment_box)
-  
+
   if(!is.null(comments)) { shiny.r$data$comments[k.tmp] <- comments }
-  
+
   # cat("Confirmed", k.tmp, "\n")
   if(k.tmp + 1 <= dataPar$n) {
     kk(k.tmp + 1)
     FROM_CONFIRM <<- TRUE
     # cat(FROM_CONFIRM ,"\n")
-  } 
+  }
   # else {
   #   kk(1)
   #   FROM_CONFIRM <<- TRUE
   # }
-  
+
 })
 #######################################
 
@@ -132,33 +132,33 @@ output$x3p_comment_box_ui <- renderUI({
 ########################################
 
 observeEvent(input$saveCurrentEnv, {
-  shiny.tt <<- shiny.r$data
+  investigatR_obj <<- shiny.r$data
   output$saveptp <- renderText({
-    paste("Successfully saved your progress. A object called 'shiny.tt' should be found in your R environment")
+    paste("Successfully saved your progress. A object called 'investigatR_obj' should be found in your R environment")
   })
-  
+
 })
 
-# check shiny.tt
+# check investigatR_obj
 observeEvent(input$ttcheck, {
   x3p_checker <- isolate(dataPar$hasname_x3p)
   crosscut_checker <- isolate(dataPar$hasname_crosscut)
   grooves_checker <- isolate(dataPar$hasname_grooves)
   scanid_checker <- isolate(dataPar$hasname_scanid)
-  
+
   if(NOSHINY_TT) {
     output$checkresult <- renderText({
-      "Could not find shiny.tt in the current environment. shiny.tt should be a tibble object."
+      "Could not find investigatR_obj in the current environment. investigatR_obj should be a tibble object."
     })
   } else {
     output$checkresult <- renderText({
-      paste("Check if shiny.tt has the following variable names: \nx3p: ", x3p_checker,
+      paste("Check if investigatR_obj has the following variable names: \nx3p: ", x3p_checker,
             "\ncrosscut: ", crosscut_checker,
             "\ngrooves: ", grooves_checker,
             "\nscan_id: ", scanid_checker)
     })
   }
-  
+
   if(x3p_checker & crosscut_checker & grooves_checker & scanid_checker) {
     output$suggest <- renderText({
       "Ready to go!"
@@ -177,7 +177,7 @@ observeEvent(input$ttcheck, {
     if(!grooves_checker) { sug.idx <- c(sug.idx, 2) }
     if(!crosscut_checker) { sug.idx <- c(sug.idx, 3) }
     if(!scanid_checker) { sug.idx <- c(sug.idx, 4) }
-    
+
     output$suggest <- renderText({
       paste(suggestion[sug.idx], collapse = "\n")
     })
@@ -191,7 +191,7 @@ observe({
     if(dataPar$hasname_grooves){
       output$groovePlot <- renderPlot({
         k <- kk()
-        
+
         if(assertthat::has_name(shiny.r$data$grooves[[k]], "groove")){
           p <- shiny.r$data$grooves[[k]]$plot +
             geom_vline(xintercept = shiny.r$data$grooves[[k]]$groove[1], colour="red") +
@@ -199,33 +199,33 @@ observe({
         }
         p
       })
-      
+
       output$groovelocations <- renderText({
         paste("Left Groove: ",shiny.r$data$grooves[[kk()]]$groove[1],
               "    Right Groove: ",shiny.r$data$grooves[[kk()]]$groove[2])
       })
     }
-    
+
     # if x3p are provided, give all other stuff
     if(dataPar$hasname_x3p){
       output$sigPlot <- renderPlot({
         k <- kk()
         ggplot() + geom_blank()
       })
-      
+
       if(dataPar$hasname_crosscut){
         output$ccvalue <- renderText({
-          paste("Current Crosscut Value: ",
-                shiny.r$data$crosscut[kk()] ) })
+          paste("<b>Current Crosscut Value: ",
+                shiny.r$data$crosscut[kk()], "</b>" ) })
       }
-      
+
     }
   }
 })
 
 
 
-# SAVE 
+# SAVE
 output$downloadData <- downloadHandler(
   filename = function() {
     paste("processed_bullets.rds")
@@ -237,7 +237,7 @@ output$downloadData <- downloadHandler(
 
 # MARK
 observeEvent(input$mark,{
-  
+
   k <- isolate(kk())
   shiny.r$data$grooves[[k]]$marked <<- TRUE
   cat("Marked Groove:", k, "\n")
@@ -246,7 +246,7 @@ observeEvent(input$mark,{
   } else {
     cat("Bullet ID is not available. \n")
   }
-  
+
 })
 
 # UNMARK
@@ -257,19 +257,19 @@ observeEvent(input$unmark,{
 
 # EVENT: UPDATE CROSSCUT VALUE
 observeEvent(input$updateCC, {
-  
+
   k <- kk()
   tmp.tt <- shiny.r$data %>% slice(k)
-  
+
   tmp.tt$crosscut <- as.numeric(input$cc)
-  
+
   tmp.tt <- tmp.tt %>%
     mutate(ccdata = purrr::map2(.x = x3p, .y = crosscut, .f = bulletxtrctr::x3p_crosscut)
     ) %>%
     mutate(grooves = ccdata %>% purrr::map(.f = bulletxtrctr::cc_locate_grooves, method = "middle", adjust = 30, return_plot = TRUE))
-  
+
   shiny.r$data[k, c("crosscut", "ccdata", "grooves")] <<- tmp.tt %>% select(crosscut, ccdata, grooves)
-  
+
   cat("updated crosscut value: ", shiny.r$data$crosscut[k], "\n")
   if (isolate(dataPar$hasname_scanid)) {
     cat("Bullet ID:", shiny.r$data$scan_id[k], "\n")
@@ -278,23 +278,23 @@ observeEvent(input$updateCC, {
   }
   output$ccvalue <- renderText({
     # cat("test1")
-    paste("Current Crosscut Value: ", shiny.r$data$crosscut[kk()]) })
-  
+    paste("<b>Current Crosscut Value: ", shiny.r$data$crosscut[kk()], "</b>") })
+
   # shiny.r$data$changed_crosscut[k] <<- 'TRUE'
-  
+
 })
 
 # Event: check if the crosscuts are changed
 observeEvent(input$cc_status, {
-  
+
   show_modal_spinner(spin = "atom", text = "Checking...")
-  
+
   if(!assertthat::has_name(shiny.r$data, "crosscut_auto")) {
     shiny.r$data <<- shiny.r$data %>% mutate(
       crosscut_auto = x3p %>% purrr::map_dbl(.f = x3p_crosscut_optimize)
-    ) 
+    )
   }
-  
+
   shiny.r$data$changed_crosscut <<- as.character(shiny.r$data$crosscut != shiny.r$data$crosscut_auto)
 
   remove_modal_spinner()
@@ -303,12 +303,12 @@ observeEvent(input$cc_status, {
 # EVENT: DRAW SIGNATURE
 observeEvent(input$drawsig, {
   k <- kk()
-  
+
   # update: compute ccdata if null
   tmp.tt <- shiny.r$data %>% slice(k)
-  
+
   if (!assertthat::has_name(tmp.tt, "ccdata")) {
-    tmp.tt <- tmp.tt %>% mutate( 
+    tmp.tt <- tmp.tt %>% mutate(
       ccdata = purrr::map2(.x = x3p, .y = crosscut, .f = bulletxtrctr::x3p_crosscut),
       sigs = purrr::map2(.x = ccdata, .y = grooves, .f = function(x, y) {
         bulletxtrctr::cc_get_signature(ccdata = x, grooves = y, span1 = 0.75, span2 = 0.03)})
@@ -319,7 +319,7 @@ observeEvent(input$drawsig, {
         bulletxtrctr::cc_get_signature(ccdata = x, grooves = y, span1 = 0.75, span2 = 0.03)
       }))
   }
-  
+
   output$sigPlot <- renderPlot({
     k <- kk()
     p <- tmp.tt$sigs[[1]] %>% filter(!is.na(sig), !is.na(raw_sig)) %>%
@@ -335,9 +335,9 @@ observeEvent(input$drawsig, {
 observeEvent(input$plot_click,{
   k <- kk()
   xloc <- input$plot_click$x
-  
+
   tmp <- isolate(shiny.r$data)
-  
+
   gr <- tmp$grooves[[k]]$groove
   if (abs(gr[1]-xloc) < abs(gr[2]-xloc)) {
     shiny.r$data$grooves[[k]]$groove[1] <<- xloc
@@ -350,39 +350,98 @@ observeEvent(input$plot_click,{
 observeEvent(input$displayx3p, {
   req(shiny.r$data)
   req(input$k)
-  
+
   k <- kk()
-  
+
   tmp <- isolate(shiny.r$data)
-  
-  output$x3prgl <- renderRglwidget({
-    if(isolate(dataPar$hasname_crosscut)){
-      image_x3p(
-        tmp$x3p[k][[1]] %>% x3p_add_hline(
-          yintercept = tmp$crosscut[k], size = 10)) 
-    } else {
-      image_x3p(tmp$x3p[k][[1]]) 
-    }
-  })
+
+  if (USE_RGL) {
+    output$x3prgl <- renderRglwidget({
+      if(isolate(dataPar$hasname_crosscut)){
+        image_x3p(
+          tmp$x3p[k][[1]] %>% x3p_add_hline(
+            yintercept = tmp$crosscut[k], size = 10))
+      } else {
+        image_x3p(tmp$x3p[k][[1]])
+      }
+    })
+  } else {
+    output$x3prgl <- renderImage({
+      outfile <- tempfile(fileext = '.png')
+
+      if(isolate(dataPar$hasname_crosscut)){
+        image_x3p(tmp$x3p[k][[1]] %>% x3p_add_hline(
+          yintercept = tmp$crosscut[k], size = 10),
+          file = outfile)
+      } else {
+        image_x3p(tmp$x3p[k][[1]], file = outfile)
+      }
+
+      # image_size <- tmp$x3p[k][[1]] %>% x3p_show_xml('size')
+
+      # Return a list containing the filename
+      list(src = outfile,
+           contentType = 'image/png',
+           alt = "This is alternate text")
+    }, deleteFile = TRUE)
+  }
 })
+
+# output$eg_LEA <- renderImage({
+#
+#   outfile <- 'inst/www/example_LEA.png'
+#   list(src = outfile,
+#        width = 'auto',
+#        contentType = 'image/png',
+#        alt = "This is alternate text")
+# }, deleteFile = FALSE)
+
 
 observeEvent(input$displayx3p2, {
   req(shiny.r$data)
   req(nrow(shiny.r$data) >= 1)
-  
+
   k <- 1
-  
+
   tmp <- isolate(shiny.r$data)
-  
-  output$x3prgl2 <- renderRglwidget({
+  # s <- my_x3p_image(tmp$x3p[k][[1]])
+  # rgl.close()
+  # x3p_image(tmp$x3p[k][[1]])
+  logo <- x3p_read(system.file("csafe-logo.x3p", package="x3ptools"))
+
+
+  output$x3prgl2 <- renderImage({
+    # A temp file to save the output.
+    # This file will be removed later by renderImage
+    outfile <- tempfile(fileext = '.png')
+    # cat(outfile)
+
     if(isolate(dataPar$hasname_crosscut)){
-      image_x3p(
-        tmp$x3p[k][[1]] %>% x3p_add_hline(
-          yintercept = tmp$crosscut[k], size = 10)) 
+      image_x3p(tmp$x3p[k][[1]] %>% x3p_add_hline(
+        yintercept = tmp$crosscut[k], size = 10),
+        file = outfile)
     } else {
-      image_x3p(tmp$x3p[k][[1]]) 
+      image_x3p(tmp$x3p[k][[1]], file = outfile)
     }
-  })
+
+    # image_size <- tmp$x3p[k][[1]] %>% x3p_show_xml('size')
+
+    # Return a list containing the filename
+    list(src = outfile,
+         contentType = 'image/png',
+         # width = image_size$sizeY,
+         # height = image_size$sizeX,
+         alt = "This is alternate text")
+  }, deleteFile = TRUE)
+  # output$x3prgl2 <- renderRglwidget({
+  #
+  #   # rglwidget(s)
+  #
+  #
+  # # output$x3prgl2 <- renderPlaywidget({
+  # # output$x3prgl2 <- renderWebGL({
+
+  # })
 })
 
 
@@ -392,6 +451,10 @@ observeEvent(input$k, {
     k <- isolate(kk())
     ggplot() + geom_blank()
   })
+
+  if (!USE_RGL) {
+    output$x3prgl <- NULL
+  }
 })
 
 
@@ -422,14 +485,14 @@ output$save_csv <- downloadHandler(
     tmp$manual_rep <- 1
     tmp$groove_left_manual <- sapply(tmp$grooves, function(g) {g$groove[1]} )
     tmp$groove_right_manual <- sapply(tmp$grooves, function(g) {g$groove[2]} )
-    
-    csv_tmp <- tmp %>% select(study, source, scan_id, crosscut, 
-                              manual_code, manual_rep, 
+
+    csv_tmp <- tmp %>% select(study, source, scan_id, crosscut,
+                              manual_code, manual_rep,
                               groove_left_manual, groove_right_manual,
                               type, comments, crosscut_auto, changed_crosscut)
     # cat("good?", file)
     write.csv(csv_tmp, file)
-    
+
   }
 )
 
